@@ -7,9 +7,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
+import it.polito.tdp.extflightdelays.model.CoppiaAeroporti;
 import it.polito.tdp.extflightdelays.model.Flight;
 
 public class ExtFlightDelaysDAO {
@@ -91,4 +93,37 @@ public class ExtFlightDelaysDAO {
 			throw new RuntimeException("Error Connection Database");
 		}
 	}
+	
+	public List<CoppiaAeroporti> loadFlightsByAvgDistance(Map<Integer, Airport> aeroportiIdMap) {
+		
+			String sql = "select ORIGIN_AIRPORT_ID , DESTINATION_AIRPORT_ID, avg(DISTANCE) AS media_distanza from flights "+
+			 "GROUP BY ORIGIN_AIRPORT_ID, DESTINATION_AIRPORT_ID " +
+			 "ORDER BY origin_airport_id, destination_airport_id ASC";
+			
+			List<CoppiaAeroporti> result = new ArrayList<>();
+			
+			try {
+				Connection conn = ConnectDB.getConnection() ;
+				PreparedStatement st = conn.prepareStatement(sql);
+				ResultSet res = st.executeQuery();
+				
+				while(res.next()) {
+					CoppiaAeroporti c = new CoppiaAeroporti(
+							aeroportiIdMap.get(res.getInt("ORIGIN_AIRPORT_ID")),
+							aeroportiIdMap.get(res.getInt("DESTINATION_AIRPORT_ID")),
+							res.getFloat("media_distanza")) ;
+						result.add(c);
+				}
+				
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			
+			return result ;
+		}
+		
+
 }
+	
+
